@@ -7,6 +7,8 @@ function WebRTC() {
 	var connection = false;
 	var roomId = false; // here is the room-ID stored
 	var username = false; // this is your username
+	var myAudioTrack = false; // media-Streams
+	var myVideoTrack = false; // media-Streams
 
 	// via this element we will send events to the view
 	var socketEvent = document.createEvent('Event');
@@ -98,5 +100,67 @@ function WebRTC() {
 	// sets the username
 	this.setUsername = function(name) {
 		username = name;
+	};
+
+	// get the video & audio-stream
+	this.getMedia = function(constraints,success,fail) {
+		// set default constraints
+		if(!constraints) {
+			constraints = {audio: true, video: true};
+		}
+
+		// check browsersupport
+        if(navigator.getUserMedia) {
+        	console.log('prefix-less');
+            getUserMedia = navigator.getUserMedia.bind(navigator);
+        }
+        else if(navigator.webkitGetUserMedia) {
+        	console.log('webkit');
+            getUserMedia = navigator.webkitGetUserMedia.bind(navigator);
+        }
+        else if(navigator.mozGetUserMedia) {
+        	console.log('mozilla');
+            getUserMedia = navigator.mozGetUserMedia.bind(navigator);
+        }
+            // call getUserMedia for other Browsers
+            getUserMedia(
+                {"audio":constraints.audio,"video":constraints.video},
+                function (stream) {
+                    myStream = stream;
+                    if(constraints.audio) {
+                        try {
+                            myAudioTrack = stream.getAudioTracks()[0];
+                        } catch(e) {
+                            console.log('ERROR accessing Audio' +e);
+                            myAudioTrack = false;
+                        }
+                    }
+                    if(constraints.video) {
+                        try {
+                            myVideoTrack = stream.getVideoTracks()[0];
+                        } catch(e) {
+                            console.log('ERROR accessing Video' +e);
+                            myVideoTrack = false;
+                        }
+                    }
+                    // close mediastream & return if wanted media is not available
+                    if( constraints.audio && !myAudioTrack ||
+                        constraints.video && !myVideoTrack ) {
+                        that.stopStream();
+	                    if(fail) {
+	                        fail();
+	                    }
+	                    return false;
+                    }
+                    if(success) {
+                    	success(myStream);
+                    }
+                }, function(e){
+                    console.log("GetUserMediaFailed: "+e);
+                    if(fail) {
+                        fail();
+                    }
+                }
+            );
 	};
 }

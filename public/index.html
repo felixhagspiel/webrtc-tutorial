@@ -98,6 +98,7 @@
 			.other-video {
 				height: 100%;
 				max-height: 30em;
+				max-width: 100%;
 			}
 		</style>
 	</head>
@@ -116,12 +117,8 @@
 			<h3>Room-ID: <span id="roomId"></span></h3>
 			<a id="closeroom" href="" class="btn">close room</a>
 			<div class="video-wrapper">
-				<div class="other-video">
-					<video src=""></video>
-				</div>
-				<div class="own-video">
-					<video src=""></video>
-				</div>
+				<video id="otherVideo" class="other-video" src="" autoplay></video>
+				<video id="ownVideo" class="own-video" src="" autoplay></video>
 			</div>
 		</section>
 		<script src="client.js" type="text/javascript"></script>
@@ -138,6 +135,7 @@
 			var login = document.getElementById('login');
 			var roomId = document.getElementById('roomId');
 			var room = document.getElementById('room');
+			var ownVideo = document.getElementById('ownVideo');
 
 			/*
 			*	Create some Helper-Functions
@@ -180,6 +178,18 @@
 
 					// set URL
 					roomId.innerHTML = WebRTC.getRoomId();
+
+					// get media-stream
+					var success = function(blob){
+			            if(ownVideo.mozSrcObject !== undefined) {
+			                ownVideo.mozSrcObject = myStream;
+			            }
+			            else {
+			                ownVideo.src = URL.createObjectURL(myStream);
+			            }
+			            ownVideo.play();
+					};
+					WebRTC.getMedia({audio: true, video: true},success);
 				}
 			});
 
@@ -195,10 +205,6 @@
 
 				// create a room
 				WebRTC.createRoom();
-
-
-
-
 			});
 		</script>
 	</body>
