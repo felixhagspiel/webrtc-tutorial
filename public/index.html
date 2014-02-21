@@ -117,8 +117,8 @@
 			<h3>Room-ID: <span id="roomId"></span></h3>
 			<a id="closeroom" href="" class="btn">close room</a>
 			<div class="video-wrapper">
-				<video id="otherVideo" class="other-video" src="" autoplay></video>
-				<video id="ownVideo" class="own-video" src="" autoplay></video>
+				<video id="otherVideo" class="other-video" src="" autoplay="true"></video>
+				<video id="ownVideo" class="own-video" src="" autoplay="true"></video>
 			</div>
 		</section>
 		<script src="client.js" type="text/javascript"></script>
@@ -136,6 +136,7 @@
 			var roomId = document.getElementById('roomId');
 			var room = document.getElementById('room');
 			var ownVideo = document.getElementById('ownVideo');
+			var otherVideo = document.getElementById('otherVideo');
 
 			/*
 			*	Create some Helper-Functions
@@ -171,25 +172,32 @@
 
 			// add a eventlister when the server has answered
 			document.addEventListener('socketEvent', function(socketEvent){
-				// if event has the correct type hide login and show room
-				if(socketEvent.eventType === 'roomCreated') {
-					removeClass(login,'active');
-					addClass(room,'active');
 
-					// set URL
-					roomId.innerHTML = WebRTC.getRoomId();
 
-					// get media-stream
-					var success = function(blob){
-			            if(ownVideo.mozSrcObject !== undefined) {
-			                ownVideo.mozSrcObject = myStream;
+				switch(socketEvent.eventType) {
+					case 'roomCreated':
+						// hide login and show room
+						removeClass(login,'active');
+						addClass(room,'active');
+						// set URL
+						roomId.innerHTML = WebRTC.getRoomId();
+					break;
+					case 'p2pConnectionReady':
+						// hide login and show room
+						removeClass(login,'active');
+						addClass(room,'active');
+						// set URL
+						roomId.innerHTML = WebRTC.getRoomId();
+					break;
+					case 'streamAdded':
+			            if(otherVideo.mozSrcObject !== undefined) {
+			                otherVideo.mozSrcObject = WebRTC.getOtherStream();
 			            }
 			            else {
-			                ownVideo.src = URL.createObjectURL(myStream);
+			                otherVideo.src = URL.createObjectURL(WebRTC.getOtherStream());
 			            }
-			            ownVideo.play();
-					};
-					WebRTC.getMedia({audio: true, video: true},success);
+			            otherVideo.play();
+					break;
 				}
 			});
 
@@ -200,11 +208,47 @@
 					console.log('Please set an username before creating a room!');
 					return;
 				}
-				// set your username
-				WebRTC.setUsername(usernameInput.value);
+				// get media-stream
+				var success = function(myStream){
+		            if(ownVideo.mozSrcObject !== undefined) {
+		                ownVideo.mozSrcObject = myStream;
+		            }
+		            else {
+		                ownVideo.src = URL.createObjectURL(myStream);
+		            }
+		            ownVideo.play();
+					// set your username
+					WebRTC.setUsername(usernameInput.value);
 
-				// create a room
-				WebRTC.createRoom();
+					// create a room
+					WebRTC.createRoom();
+				};
+				WebRTC.getMedia({audio: true, video: true},success);
+			});
+
+			// join room
+			joinRoom.addEventListener('click',function(e){
+				e.preventDefault();
+				if(!usernameInput.value || !roomidInput.value) {
+					console.log('Please set an username and room-ID before creating a room!');
+					return;
+				}
+				// get media-stream
+				var success = function(myStream){
+		            if(ownVideo.mozSrcObject !== undefined) {
+		                ownVideo.mozSrcObject = myStream;
+		            }
+		            else {
+		                ownVideo.src = URL.createObjectURL(myStream);
+		            }
+		            ownVideo.play();
+					// set your username
+					WebRTC.setUsername(usernameInput.value);
+
+					// join a room
+					WebRTC.joinRoom(roomidInput.value);
+				};
+				WebRTC.getMedia({audio: true, video: true},success);
 			});
 		</script>
 	</body>

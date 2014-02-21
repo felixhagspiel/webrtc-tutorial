@@ -7,8 +7,14 @@ function WebRTC() {
 	var connection = false;
 	var roomId = false; // here is the room-ID stored
 	var username = false; // this is your username
-	var myAudioTrack = false; // media-Streams
-	var myVideoTrack = false; // media-Streams
+	var myStream= false; // my media-stream
+	var otherStream= false; // other guy`s media-stream
+	var peerConnection = false; // RTCPeerconnection
+    var peerConfig =   {iceServers: [{url: !navigator.mozGetUserMedia ? 'stun:stun.l.google.com:19302' : 'stun:23.21.150.121'}] };  // set Google Stunserver
+    var peerConstraints = {"optional": [{"DtlsSrtpKeyAgreement": true}]}; // set DTLS encrpytion
+    var mySDP = false; // my sessiondescription protocol
+    var otherSDP = false;
+    var othersCandidates = []; // other guy's icecandidates
 
 	// via this element we will send events to the view
 	var socketEvent = document.createEvent('Event');
@@ -27,7 +33,191 @@ function WebRTC() {
 			console.log('There is no connection to the websocket server');
 			return false;
 		}
-	}
+	};
+
+	// create a peerconnection
+    var createRTCPeerConnection = function(config){
+        var peerConn;
+        if( typeof(RTCPeerConnection) === 'function') {
+            peerConn = new RTCPeerConnection(config);
+        }
+        else if( typeof(webkitRTCPeerConnection) === 'function') {
+            peerConn = new webkitRTCPeerConnection(config);
+        }
+        else if(typeof(mozRTCPeerConnection) === 'function' ) {
+            peerConn = new mozRTCPeerConnection(config);
+        }
+        return peerConn;
+    };
+
+    // create ice-candidate
+    var createRTCIceCandidate = function(candidate){
+            var ice;
+            if( typeof(webkitRTCIceCandidate) === 'function') {
+                ice = new webkitRTCIceCandidate(candidate);
+            }
+            else if(typeof(mozRTCIceCandidate) === 'function' ) {
+                ice = new mozRTCIceCandidate(candidate);
+            }
+            else if( typeof(RTCIceCandidate) === 'function') {
+                ice = new RTCIceCandidate(candidate);
+            }
+            return ice;
+    };
+
+    // create an session description object
+	var createRTCSessionDescription = function(sdp){
+	    var newSdp;
+	    if( typeof(RTCSessionDescription) === 'function') {
+	        newSdp = new RTCSessionDescription(sdp);
+	    }
+	    else if( typeof(webkitRTCSessionDescription) === 'function') {
+	        newSdp = new webkitRTCSessionDescription(sdp);
+	    }
+	    else if(typeof(mozRTCSessionDescription) === 'function' ) {
+	        newSdp = new mozRTCSessionDescription(sdp);
+	    }
+	    return newSdp;
+	};
+
+	// generate URL-blob
+    var createObjectURL = function(stream){
+            var createURL = URL.createObjectURL || webkitURL.createObjectURL || mozURL.createObjectURL;
+            return createURL(stream);
+    };
+
+    // set or save the icecandidates
+    var setIceCandidates = function(iceCandidate) {
+    	console.log(iceCandidate);
+    	// push icecandidate to array if no SDP of other guys is available
+        if(!otherSDP) {
+            othersCandidates.push(iceCandidate);
+        }
+        // add icecandidates immediately if not Firefox & if remoteDescription is set
+        if(!navigator.mozGetUserMedia && otherSDP &&
+                iceCandidate.candidate &&
+                iceCandidate.candidate !== null ) {
+            peerConnection.addIceCandidate(createRTCIceCandidate(iceCandidate.candidate));
+        }
+    };
+
+    // exchange of connection info is done, set SDP and ice-candidates
+    var handshakeDone = function(){
+        peerConnection.setRemoteDescription(createRTCSessionDescription(otherSDP));
+		// add other guy's ice-candidates to connection
+        for (var i = 0; i < othersCandidates.length; i++) {
+            if (othersCandidates[i].candidate) {
+                peerConnection.addIceCandidate(ceateRTCIceCandidate(othersCandidates[i].candidate));
+            }
+        }
+		// fire event
+		socketEvent.eventType = 'p2pConnectionReady';
+		document.dispatchEvent(socketEvent);
+    };
+
+    // create an offer for an peerconnection
+    var createOffer = function() {
+    	// create new peer-object
+    	peerConnection = createRTCPeerConnection(peerConfig);
+
+    	// add media-stream to peerconnection
+    	peerConnection.addStream(myStream);
+
+    	// other side added stream to peerconnection
+    	peerConnection.onaddstream = function(e) {
+    		console.log('stream added');
+    		otherStream = e.stream;
+			// fire event
+			socketEvent.eventType = 'streamAdded';
+			document.dispatchEvent(socketEvent);
+    	};
+
+    	// we receive our icecandidates and send them to the other guy
+    	peerConnection.onicecandidate = function(icecandidate) {
+    		console.log('icecandidate send to room '+roomId);
+    		// send candidates to other guy
+			var data = {
+				type: 'iceCandidate',
+				roomId: roomId,
+				payload: icecandidate
+			};
+			sendToServer(data);
+    	};
+
+    	// we actually create the offer
+    	peerConnection.createOffer(function(SDP){
+    		// save the SDP we receive from STUN-servers
+    		mySDP = SDP;
+
+    		// set our SDP as local description
+    		peerConnection.setLocalDescription(mySDP);
+    		console.log('sending offer to: '+roomId);
+    		// send SDP to other guy
+			var data = {
+				type: 'offer',
+				roomId: roomId,
+				payload: SDP
+			};
+			sendToServer(data);
+    	});
+    };
+
+    // create an answer for an received offer
+    var createAnswer = function() {
+    	// create new peer-object
+    	peerConnection = createRTCPeerConnection(peerConfig);
+
+    	// add media-stream to peerconnection
+    	peerConnection.addStream(myStream);
+
+    	// set remote-description
+    	peerConnection.setRemoteDescription(createRTCSessionDescription(otherSDP));
+
+    	// other side added stream to peerconnection
+    	peerConnection.onaddstream = function(e) {
+    		console.log('stream added');
+    		otherStream = e.stream;
+			// fire event
+			socketEvent.eventType = 'streamAdded';
+			document.dispatchEvent(socketEvent);
+    	};
+
+    	// we receive our icecandidates and send them to the other guy
+    	peerConnection.onicecandidate = function(icecandidate) {
+    		console.log('icecandidate send to room '+roomId);
+    		// send candidates to other guy
+			var data = {
+				type: 'iceCandidate',
+				roomId: roomId,
+				payload: icecandidate
+			};
+			sendToServer(data);
+    	};
+
+    	// we create the answer
+    	peerConnection.createAnswer(function(SDP){
+    		// save the SDP we receive from STUN-servers
+    		mySDP = SDP;
+
+    		// set our SDP as local description
+    		peerConnection.setLocalDescription(mySDP);
+
+    		// add other guy's ice-candidates to connection
+            for (var i = 0; i < othersCandidates.length; i++) {
+                if (othersCandidates[i].candidate) {
+                    peerConnection.addIceCandidate(ceateRTCIceCandidate(othersCandidates[i].candidate));
+                }
+            }
+
+    		// send SDP to other guy
+			var data = {
+				type: 'answer',
+				roomId: roomId,
+				payload: SDP
+			};
+			sendToServer(data);
+    	});
+    };
 
 	/*
 	* 	Public Methods
@@ -63,8 +253,8 @@ function WebRTC() {
                 console.log(message);
                 return;
             }
-
-            switch(data.type) {
+            console.log(data.type);
+            switch( data.type ) {
             	// the server has created a room and returns the room-ID
             	case 'roomCreated':
             		// set room
@@ -73,6 +263,25 @@ function WebRTC() {
             		// fire event
             		socketEvent.eventType = 'roomCreated';
             		document.dispatchEvent(socketEvent);
+            	break;
+            	// other guy wants to join room
+            	case 'offer':
+            		console.log('offer received, answer will be created');
+            		otherSDP = data.payload;
+            		createAnswer();
+            	break;
+            	//
+            	case 'answer':
+            		console.log('answer received, connection will be established');
+            		otherSDP = data.payload;
+            		handshakeDone();
+            	break;
+            	// we receive icecandidates from the other guy
+            	case 'iceCandidate':
+            		setIceCandidates(data.payload);
+            	break;
+            	default:
+            		console.log('def');
             	break;
             }
 		};
@@ -96,7 +305,11 @@ function WebRTC() {
 		}
 		console.log('It looks like you have no username.');
 	};
-
+	// connect to a room
+	this.joinRoom = function(id){
+		roomId = id;
+		createOffer();
+	};
 	// sets the username
 	this.setUsername = function(name) {
 		username = name;
@@ -126,6 +339,8 @@ function WebRTC() {
             getUserMedia(
                 {"audio":constraints.audio,"video":constraints.video},
                 function (stream) {
+
+                	// set stream
                     myStream = stream;
                     if(constraints.audio) {
                         try {
@@ -162,5 +377,10 @@ function WebRTC() {
                     }
                 }
             );
+	};
+
+	// get the other guys media stream
+	this.getOtherStream = function(){
+		return otherStream;
 	};
 }

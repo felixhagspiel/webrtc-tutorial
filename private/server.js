@@ -8,9 +8,7 @@ http = require('http'),
 uuid = require('uuid'),
 // here we will save all clients who
 // are currently connected to the websocket server
-rooms= {},
-// here we save the connection of our partner
-otherPerson = false;
+rooms= {};
 
 // Because Websockets are using an upgraded
 // HTTP header we need to create an HTTP server
@@ -52,9 +50,9 @@ wsServer.on('request', function(request) {
 					// generate roomId and store current connection if username is present
 					if(data.payload) {
 						var roomId = uuid.v1();
-						rooms[roomId] = connection;
 						rooms[roomId] = {
-							username: data.payload
+							username: data.payload,
+							connection: connection
 						}
 
 						// send token to user
@@ -72,6 +70,11 @@ wsServer.on('request', function(request) {
 						};
 						send(connection, data);
 					}
+				break;
+				// send to room
+				default:
+					console.log('type: '+data.type+'room: '+data.roomId);
+					send(rooms[data.roomId].connection, data);
 				break;
 			}
 		}
