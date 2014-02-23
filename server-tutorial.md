@@ -1,24 +1,9 @@
-## Let's get started
-
-You will build a one-to-one videochat application which uses DTLS encrpytion. This example will run in the recent Desktop-Versions of Chrome and Opera, but most likely not in Firefox and Safari (and, of course, not in any Internet Explorer).
-
-### Important: I am not an expert in WebRTC nor in Websecurity. I just wrote down what I learned while programming the WebRTC-App for my Bachelor-Thesis, so this tutorial is not to be understood as a complete and finished example!
-### I will not be reliable for any problems or issues you have during creating or while using the application! If you want to build an commercial application or an application where security is highly important you should not use this tutorial!
-
-What you need for this example:
-
-- Current Chrome or Opera browser
-- A terminal with SSH (you can use cmd.exe or [cygwin](http://www.cygwin.com/) for Windows)
-- A node.js-Server which uses Websockets. If you have none I can recommend [www.uberspace.de](https://uberspace.de/). You will get your own virtual machine with SSH-access for 30 days free. After that you can choose how much you want to pay, the minimum is 1 Euro. My proof of concept also runs on uberspace.
-- Any texteditor. I am using [Sublime Text 2](http://www.sublimetext.com/2)
-
-
 ### Setting up a WebSocket Server for Signaling using uberspace.de
 
-Note: If you use uberspace you will have to ask them to open up a port for you so you can use websockets. Usually they respond in 1-2 days max, for this example it took them half an hour to reply (a Monday at 4pm). If you do not want to wait you have to use another nodehosting service, a list can be found [here](https://github.com/joyent/node/wiki/Node-Hosting).
+If you want to use uberspace you will have to ask them to open up a port for you so you can use websockets. Usually they respond in 1-2 days max., for this example it took them half an hour to reply (a Monday at 4pm). If you do not want to wait you have to use another nodehosting service, a list can be found [here](https://github.com/joyent/node/wiki/Node-Hosting).
 
-If you still want to use uberspace, go to [uberspace.de/register](https://uberspace.de/register) and enter a name below 'DEIN UBERSPACE'. On the next page select a password right below where it says 'ICH WÄHLE LIEBER EIN PASSWORT' (you will need a strong password, just keep typing untill the text gets green). After that your account is created. Hurray! On the following page you will find your email address, in my case webrtcer@vulpecula.uberspace.de. `vulpecula` is the name of the server where your VM is hosted, you will need that a lot so better write it down (your password also, of course). You can access your mails via http://webmail.yourvmservername.uberspace.de.
-Then login to webmail and send an email to `hallo@uberspace.de` and kindly ask them to open up a port between 61000 and 65535 so you can use websockets (you can write in English).
+If you still want to use uberspace, go to [uberspace.de/register](https://uberspace.de/register) and enter a name below 'DEIN UBERSPACE'. On the next page select a password right below where it says 'ICH WÄHLE LIEBER EIN PASSWORT' (you will need a strong password, just keep typing until the text gets green). After that your account is created. Hurray! On the following page you will find your account-related email address, in my case it is webrtcer@vulpecula.uberspace.de. `vulpecula` is the name of the server where your VM is hosted, you will need that a lot so better write it down (your password also, of course).
+Then login to webmail via via `http://webmail.yourvmservername.uberspace.de`, send an email to `hallo@uberspace.de` and kindly ask them to open up a port between 61000 and 65535 so you can use websockets (you can write in English).
 
 Next you will have to set your SSH-password (or SSH-key, if you prefer). Click on 'ZUGÄNGE' and enter a password where it says '… via Passwort' or add an SSH-Key where it says '… via SSH-Schlüssel'.
 
@@ -26,7 +11,7 @@ Once you have done that open up your terminal and SSH into your VM:
 
 	ssh yourusername@sourvmservername.uberspace.de
 
-Then check if node and npm is installed (you should see the versions number):
+Then check if node and npm is installed by typing these commands (if they are you should see the versions number):
 
 `node -v`
 
