@@ -158,6 +158,7 @@ function WebRTC() {
 				roomId: roomId,
 				payload: SDP
 			};
+			console.log(data);
 			sendToServer(data);
     	});
     };
@@ -253,7 +254,7 @@ function WebRTC() {
                 console.log(message);
                 return;
             }
-            console.log(data.type);
+            console.log(data);
             switch( data.type ) {
             	// the server has created a room and returns the room-ID
             	case 'roomCreated':

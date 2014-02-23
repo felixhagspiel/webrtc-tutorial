@@ -51,8 +51,11 @@ wsServer.on('request', function(request) {
 					if(data.payload) {
 						var roomId = uuid.v1();
 						rooms[roomId] = {
-							username: data.payload,
-							connection: connection
+							creatorName: data.payload,
+							creatorConnection: connection,
+							partnerName: false,
+							partnerConnection: false,
+
 						}
 
 						// send token to user
@@ -60,21 +63,37 @@ wsServer.on('request', function(request) {
 							type: 'roomCreated',
 							payload: roomId
 						};
-						send(connection, data);
+						return send(connection, data);
 					}
-					else {
+					// send error to user
+					var data = {
+						type: 'error',
+						payload: 'your username was missing'
+					};
+					return send(connection, data);
+				break;
+				case 'offer':
+					if(rooms[data.roomId].partnerConnection) {
 						// send error to user
 						var data = {
 							type: 'error',
-							payload: 'your username was missing'
+							payload: 'room is already full'
 						};
-						send(connection, data);
+						return send(connection, data);
 					}
+					console.log('offer sended');
+					rooms[data.roomId].partnerConnection = this;
+
+					return send(rooms[data.roomId].creatorConnection, data);
 				break;
-				// send to room
+				// send to other guy
 				default:
-					console.log('type: '+data.type+'room: '+data.roomId);
-					send(rooms[data.roomId].connection, data);
+					if(this === rooms[data.roomId].partnerConnection) {
+						console.log('send to creator : '+data.type);
+						return send(rooms[data.roomId].creatorConnection, data);
+					}
+					console.log('send to parther : '+data.type);
+					return send(rooms[data.roomId].partnerConnection, data);
 				break;
 			}
 		}
@@ -96,9 +115,6 @@ wsServer.on('request', function(request) {
 		catch(e) {
 			console.log('\n\n!!!### ERROR while sending message ###!!!\n');
 			console.log(e+'\n');
-			console.log('\n\n!!!### Message: ###!!!\n');
-			console.log(users);
-			console.log(data);
 			return;
 		}
 	};
