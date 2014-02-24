@@ -6,7 +6,6 @@ function WebRTC() {
 	var that = this;
 	var connection = false;
 	var roomId = false; // here is the room-ID stored
-	var username = false; // this is your username
 	var myStream= false; // my media-stream
 	var otherStream= false; // other guy`s media-stream
 	var peerConnection = false; // RTCPeerconnection
@@ -294,28 +293,19 @@ function WebRTC() {
 
 	// this function tells the server to create a new room
 	this.createRoom = function() {
-		// send request when username is set & connection is ready
-		if(username) {
-			// create data-object
-			var data = {
-				type: 'createRoom',
-				payload: username
-			};
-			// send data-object to server
-			return sendToServer(data);
-		}
-		console.log('It looks like you have no username.');
+		// create data-object
+		var data = {
+			type: 'createRoom',
+			payload: false
+		};
+		// send data-object to server
+		return sendToServer(data);
 	};
 	// connect to a room
 	this.joinRoom = function(id){
 		roomId = id;
 		createOffer();
 	};
-	// sets the username
-	this.setUsername = function(name) {
-		username = name;
-	};
-
 	// get the video & audio-stream
 	this.getMedia = function(constraints,success,fail) {
 		// set default constraints

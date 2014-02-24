@@ -47,30 +47,18 @@ wsServer.on('request', function(request) {
 		if(data !== undefined && data.type !== undefined) {
 			switch(data.type) {
 				case 'createRoom':
-					// generate roomId and store current connection if username is present
-					if(data.payload) {
-						var roomId = uuid.v1();
-						rooms[roomId] = {
-							creatorName: data.payload,
-							creatorConnection: connection,
-							partnerName: false,
-							partnerConnection: false,
-
-						}
-
-						// send token to user
-						var data = {
-							type: 'roomCreated',
-							payload: roomId
-						};
-						return send(connection, data);
+					// generate roomId and store current connection
+					var roomId = uuid.v1();
+					rooms[roomId] = {
+						creatorConnection: connection,
+						partnerConnection: false,
 					}
-					// send error to user
+					// send token to user
 					var data = {
-						type: 'error',
-						payload: 'your username was missing'
+						type: 'roomCreated',
+						payload: roomId
 					};
-					return send(connection, data);
+					return send(rooms[roomId].creatorConnection, data);
 				break;
 				case 'offer':
 					if(rooms[data.roomId].partnerConnection) {

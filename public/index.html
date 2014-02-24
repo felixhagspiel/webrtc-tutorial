@@ -125,10 +125,8 @@
 		<script>
 
 			/*
-			*	Get Elements
+			*	Get DOM-Elements
 			*/
-
-			var usernameInput = document.getElementById('usernameInput');
 			var roomidInput = document.getElementById('roomidInput');
 			var createRoom = document.getElementById('createRoom');
 			var joinRoom = document.getElementById('joinRoom');
@@ -161,7 +159,7 @@
 			*/
 
 			// create new WebRTC-Object
-			var WebRTC = new WebRTC(document);
+			var WebRTC = new WebRTC();
 
 			// connect to websocket server
 			WebRTC.connectToSocket('ws://vulpecula.uberspace.de:63949');
@@ -179,23 +177,26 @@
 						// hide login and show room
 						removeClass(login,'active');
 						addClass(room,'active');
-						// set URL
+						// display the room-ID
 						roomId.innerHTML = WebRTC.getRoomId();
 					break;
 					case 'p2pConnectionReady':
 						// hide login and show room
 						removeClass(login,'active');
 						addClass(room,'active');
-						// set URL
+						// display the room-ID
 						roomId.innerHTML = WebRTC.getRoomId();
 					break;
 					case 'streamAdded':
+						// we receive the video-stream of our partner
+						// and play it on the video-element
 			            if(otherVideo.mozSrcObject !== undefined) {
 			                otherVideo.mozSrcObject = WebRTC.getOtherStream();
 			            }
 			            else {
 			                otherVideo.src = URL.createObjectURL(WebRTC.getOtherStream());
 			            }
+			            // play video on FF
 			            otherVideo.play();
 					break;
 				}
@@ -204,10 +205,6 @@
 			// create a new room
 			createRoom.addEventListener('click',function(e){
 				e.preventDefault();
-				if(!usernameInput.value) {
-					console.log('Please set an username before creating a room!');
-					return;
-				}
 				// get media-stream
 				var success = function(myStream){
 		            if(ownVideo.mozSrcObject !== undefined) {
@@ -217,9 +214,6 @@
 		                ownVideo.src = URL.createObjectURL(myStream);
 		            }
 		            ownVideo.play();
-					// set your username
-					WebRTC.setUsername(usernameInput.value);
-
 					// create a room
 					WebRTC.createRoom();
 				};
@@ -229,8 +223,8 @@
 			// join room
 			joinRoom.addEventListener('click',function(e){
 				e.preventDefault();
-				if(!usernameInput.value || !roomidInput.value) {
-					console.log('Please set an username and room-ID before creating a room!');
+				if(!roomidInput.value) {
+					console.log('Please set a room-ID before joining a room!');
 					return;
 				}
 				// get media-stream
@@ -242,9 +236,6 @@
 		                ownVideo.src = URL.createObjectURL(myStream);
 		            }
 		            ownVideo.play();
-					// set your username
-					WebRTC.setUsername(usernameInput.value);
-
 					// join a room
 					WebRTC.joinRoom(roomidInput.value);
 				};

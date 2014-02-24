@@ -13,6 +13,7 @@ First of all I want to describe what the finished app will do:
 - The code I wrote has alot of room for improvement
 - It will NOT be an finished application
 - It will NOT work all the time as expected, if you want to build an chatapplication for regular use you will have to put in some extra work
+- It will only work when audio AND video is available
 
 Secondly I want to explain the complications related with WebRTC:
 
