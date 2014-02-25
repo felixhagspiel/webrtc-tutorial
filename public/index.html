@@ -105,8 +105,6 @@
 	<body>
 		<section id="login" class="section login active">
 			<div class="input-wrapper">
-				<input id="usernameInput" type="text" class="u-width--100 input u-margin-top--medium" placeholder="choose your username">
-				<h2>then</h2>
 				<a id="createRoom" href="" type="text" class="u-width--100 btn u-margin-bottomapitnoa-medium">create room</a>
 				<h2>or</h2>
 				<input id="roomidInput" type="text" class="u-width--100 input u-margin-top--medium" placeholder="enter room-id...">
@@ -170,8 +168,6 @@
 
 			// add a eventlister when the server has answered
 			document.addEventListener('socketEvent', function(socketEvent){
-
-
 				switch(socketEvent.eventType) {
 					case 'roomCreated':
 						// hide login and show room
@@ -190,14 +186,7 @@
 					case 'streamAdded':
 						// we receive the video-stream of our partner
 						// and play it on the video-element
-			            if(otherVideo.mozSrcObject !== undefined) {
-			                otherVideo.mozSrcObject = WebRTC.getOtherStream();
-			            }
-			            else {
-			                otherVideo.src = URL.createObjectURL(WebRTC.getOtherStream());
-			            }
-			            // play video on FF
-			            otherVideo.play();
+		                otherVideo.src = URL.createObjectURL(WebRTC.getOtherStream());
 					break;
 				}
 			});
@@ -207,13 +196,7 @@
 				e.preventDefault();
 				// get media-stream
 				var success = function(myStream){
-		            if(ownVideo.mozSrcObject !== undefined) {
-		                ownVideo.mozSrcObject = myStream;
-		            }
-		            else {
-		                ownVideo.src = URL.createObjectURL(myStream);
-		            }
-		            ownVideo.play();
+	                ownVideo.src = URL.createObjectURL(myStream);
 					// create a room
 					WebRTC.createRoom();
 				};
@@ -229,13 +212,8 @@
 				}
 				// get media-stream
 				var success = function(myStream){
-		            if(ownVideo.mozSrcObject !== undefined) {
-		                ownVideo.mozSrcObject = myStream;
-		            }
-		            else {
-		                ownVideo.src = URL.createObjectURL(myStream);
-		            }
-		            ownVideo.play();
+					// set videostream on ownVideo-object
+	                ownVideo.src = URL.createObjectURL(myStream);
 					// join a room
 					WebRTC.joinRoom(roomidInput.value);
 				};

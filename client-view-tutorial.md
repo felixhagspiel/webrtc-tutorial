@@ -19,7 +19,7 @@ Let's look at the index-file. I just added some basic CSS-styling, of course you
 As before I will not explain the parts of the index-file which I think are self-explaining or which are already commented.
 
 The two `video`-elements will represent the video- and audiostreams once the connection is established. Note that the `ownVideo`-element is muted. This is important because otherwise you will hear your own voice all the time. The autoplay-parameter ensures that the video plays even if we do not call the `.play()`-function ourself (at least in Chrome, in FF you still have to to that).
-Now to the JavaScript - here we create a new WebRTC-object which we will define in the client.js-file later. Then we execute the `connectToSocket()`-function which establishes the connection to the websocket-server (needless to say that you have to put in your server-name).
+Now to the JavaScript - here we create a new WebRTC-object which we will define in the client.js-file later. Then we execute the `connectToSocket()`-function which establishes the connection to the websocket-server (needless to say that you have to put in your server-name and the related port):
 
 	var WebRTC = new WebRTC();
 	WebRTC.connectToSocket('ws://yourservername.uberspace.de:63949');

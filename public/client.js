@@ -9,9 +9,8 @@ function WebRTC() {
 	var myStream= false; // my media-stream
 	var otherStream= false; // other guy`s media-stream
 	var peerConnection = false; // RTCPeerconnection
-    var peerConfig =   {iceServers: [{url: !navigator.mozGetUserMedia ? 'stun:stun.l.google.com:19302' : 'stun:23.21.150.121'}] };  // set Google Stunserver
+    var peerConfig =   {iceServers: [{url: 'stun:stun.l.google.com:19302'}] };  // set Google Stunserver
     var peerConstraints = {"optional": [{"DtlsSrtpKeyAgreement": true}]}; // set DTLS encrpytion
-    var mySDP = false; // my sessiondescription protocol
     var otherSDP = false;
     var othersCandidates = []; // other guy's icecandidates
 
@@ -34,29 +33,11 @@ function WebRTC() {
 		}
 	};
 
-	// create a peerconnection
-    var createRTCPeerConnection = function(config){
-        var peerConn;
-        if( typeof(RTCPeerConnection) === 'function') {
-            peerConn = new RTCPeerConnection(config);
-        }
-        else if( typeof(webkitRTCPeerConnection) === 'function') {
-            peerConn = new webkitRTCPeerConnection(config);
-        }
-        else if(typeof(mozRTCPeerConnection) === 'function' ) {
-            peerConn = new mozRTCPeerConnection(config);
-        }
-        return peerConn;
-    };
-
     // create ice-candidate
     var createRTCIceCandidate = function(candidate){
             var ice;
             if( typeof(webkitRTCIceCandidate) === 'function') {
                 ice = new webkitRTCIceCandidate(candidate);
-            }
-            else if(typeof(mozRTCIceCandidate) === 'function' ) {
-                ice = new mozRTCIceCandidate(candidate);
             }
             else if( typeof(RTCIceCandidate) === 'function') {
                 ice = new RTCIceCandidate(candidate);
@@ -73,27 +54,16 @@ function WebRTC() {
 	    else if( typeof(webkitRTCSessionDescription) === 'function') {
 	        newSdp = new webkitRTCSessionDescription(sdp);
 	    }
-	    else if(typeof(mozRTCSessionDescription) === 'function' ) {
-	        newSdp = new mozRTCSessionDescription(sdp);
-	    }
 	    return newSdp;
 	};
-
-	// generate URL-blob
-    var createObjectURL = function(stream){
-            var createURL = URL.createObjectURL || webkitURL.createObjectURL || mozURL.createObjectURL;
-            return createURL(stream);
-    };
-
     // set or save the icecandidates
     var setIceCandidates = function(iceCandidate) {
-    	console.log(iceCandidate);
     	// push icecandidate to array if no SDP of other guys is available
         if(!otherSDP) {
             othersCandidates.push(iceCandidate);
         }
         // add icecandidates immediately if not Firefox & if remoteDescription is set
-        if(!navigator.mozGetUserMedia && otherSDP &&
+        if(otherSDP &&
                 iceCandidate.candidate &&
                 iceCandidate.candidate !== null ) {
             peerConnection.addIceCandidate(createRTCIceCandidate(iceCandidate.candidate));
@@ -116,15 +86,21 @@ function WebRTC() {
 
     // create an offer for an peerconnection
     var createOffer = function() {
+
     	// create new peer-object
-    	peerConnection = createRTCPeerConnection(peerConfig);
+        if( typeof(RTCPeerConnection) === 'function') {
+            peerConnection = new RTCPeerConnection(peerConfig);
+        }
+        else if( typeof(webkitRTCPeerConnection) === 'function') {
+            peerConnection = new webkitRTCPeerConnection(peerConfig);
+        }
 
     	// add media-stream to peerconnection
     	peerConnection.addStream(myStream);
 
     	// other side added stream to peerconnection
     	peerConnection.onaddstream = function(e) {
-    		console.log('stream added');
+    		console.log('other guys stream added');
     		otherStream = e.stream;
 			// fire event
 			socketEvent.eventType = 'streamAdded';
@@ -145,11 +121,8 @@ function WebRTC() {
 
     	// we actually create the offer
     	peerConnection.createOffer(function(SDP){
-    		// save the SDP we receive from STUN-servers
-    		mySDP = SDP;
-
     		// set our SDP as local description
-    		peerConnection.setLocalDescription(mySDP);
+    		peerConnection.setLocalDescription(SDP);
     		console.log('sending offer to: '+roomId);
     		// send SDP to other guy
 			var data = {
@@ -157,7 +130,6 @@ function WebRTC() {
 				roomId: roomId,
 				payload: SDP
 			};
-			console.log(data);
 			sendToServer(data);
     	});
     };
@@ -165,7 +137,12 @@ function WebRTC() {
     // create an answer for an received offer
     var createAnswer = function() {
     	// create new peer-object
-    	peerConnection = createRTCPeerConnection(peerConfig);
+        if( typeof(RTCPeerConnection) === 'function') {
+            peerConnection = new RTCPeerConnection(peerConfig);
+        }
+        else if( typeof(webkitRTCPeerConnection) === 'function') {
+            peerConnection = new webkitRTCPeerConnection(peerConfig);
+        }
 
     	// add media-stream to peerconnection
     	peerConnection.addStream(myStream);
@@ -196,11 +173,8 @@ function WebRTC() {
 
     	// we create the answer
     	peerConnection.createAnswer(function(SDP){
-    		// save the SDP we receive from STUN-servers
-    		mySDP = SDP;
-
     		// set our SDP as local description
-    		peerConnection.setLocalDescription(mySDP);
+    		peerConnection.setLocalDescription(SDP);
 
     		// add other guy's ice-candidates to connection
             for (var i = 0; i < othersCandidates.length; i++) {
@@ -253,7 +227,6 @@ function WebRTC() {
                 console.log(message);
                 return;
             }
-            console.log(data);
             switch( data.type ) {
             	// the server has created a room and returns the room-ID
             	case 'roomCreated':
@@ -264,13 +237,13 @@ function WebRTC() {
             		socketEvent.eventType = 'roomCreated';
             		document.dispatchEvent(socketEvent);
             	break;
-            	// other guy wants to join room
+            	// other guy wants to join our room
             	case 'offer':
             		console.log('offer received, answer will be created');
             		otherSDP = data.payload;
             		createAnswer();
             	break;
-            	//
+            	// we receive the answer
             	case 'answer':
             		console.log('answer received, connection will be established');
             		otherSDP = data.payload;
@@ -279,9 +252,6 @@ function WebRTC() {
             	// we receive icecandidates from the other guy
             	case 'iceCandidate':
             		setIceCandidates(data.payload);
-            	break;
-            	default:
-            		console.log('def');
             	break;
             }
 		};
@@ -307,13 +277,12 @@ function WebRTC() {
 		createOffer();
 	};
 	// get the video & audio-stream
-	this.getMedia = function(constraints,success,fail) {
-		// set default constraints
+	this.getMedia = function(constraints,success) {
+		// set default constraints if none passed
 		if(!constraints) {
 			constraints = {audio: true, video: true};
 		}
-
-		// check browsersupport
+		// check prefix
         if(navigator.getUserMedia) {
         	console.log('prefix-less');
             getUserMedia = navigator.getUserMedia.bind(navigator);
@@ -322,52 +291,20 @@ function WebRTC() {
         	console.log('webkit');
             getUserMedia = navigator.webkitGetUserMedia.bind(navigator);
         }
-        else if(navigator.mozGetUserMedia) {
-        	console.log('mozilla');
-            getUserMedia = navigator.mozGetUserMedia.bind(navigator);
-        }
-            // call getUserMedia for other Browsers
-            getUserMedia(
-                {"audio":constraints.audio,"video":constraints.video},
-                function (stream) {
-
-                	// set stream
-                    myStream = stream;
-                    if(constraints.audio) {
-                        try {
-                            myAudioTrack = stream.getAudioTracks()[0];
-                        } catch(e) {
-                            console.log('ERROR accessing Audio' +e);
-                            myAudioTrack = false;
-                        }
-                    }
-                    if(constraints.video) {
-                        try {
-                            myVideoTrack = stream.getVideoTracks()[0];
-                        } catch(e) {
-                            console.log('ERROR accessing Video' +e);
-                            myVideoTrack = false;
-                        }
-                    }
-                    // close mediastream & return if wanted media is not available
-                    if( constraints.audio && !myAudioTrack ||
-                        constraints.video && !myVideoTrack ) {
-                        that.stopStream();
-	                    if(fail) {
-	                        fail();
-	                    }
-	                    return false;
-                    }
-                    if(success) {
-                    	success(myStream);
-                    }
-                }, function(e){
-                    console.log("GetUserMediaFailed: "+e);
-                    if(fail) {
-                        fail();
-                    }
-                }
-            );
+        // call getUserMedia
+        getUserMedia(constraints, function (stream) {
+        	// set stream
+            myStream = stream;
+            // call success-callback
+            if(success) {
+            	success(myStream);
+            }
+        }, function(e){
+            console.log("GetUserMediaFailed: "+e);
+            if(fail) {
+                fail();
+            }
+        });
 	};
 
 	// get the other guys media stream

@@ -1,8 +1,8 @@
-## What this tutorial is about
-
 As part of my Bachelor-Thesis I created a proof of concept peer-to-peer videochat-application in 2013 using HTML5 and JavaScript. You can see and try [the latest version here](webrtc-prototype.felixhagspiel.de). By that time there was only few documentation about WebRTC and not much tutorials, so I had to do a lot of trial & error. Also helpful was the [Getting Started with WebRTC-article](http://www.html5rocks.com/en/tutorials/webrtc/basics/) from html5rocks.com and [Muaz Khan's Website](https://www.webrtc-experiment.com/).
 
-Here i want to show you how to setup a basic P2P-connection and how to pass video and audio through it. I will not use any libraries like jQuery or RTCMultiConnection so you can see how WebRTC actually works. However, if you just want to create an videochat without learning the basics I suggest you use some libraries like those from [www.rtcmulticonnection.org](http://www.rtcmulticonnection.org/). There you can create an cross-browser app with a few lines of code.
+## What this tutorial is about
+
+Here I want to show you how to setup a basic P2P-connection and how to pass video and audio through it. I will not use any libraries like jQuery or RTCMultiConnection so you can see how WebRTC actually works. However, if you just want to create an videochat without learning the basics I suggest you use some libraries like those from [www.rtcmulticonnection.org](http://www.rtcmulticonnection.org/). There you can create an cross-browser app with a few lines of code.
 
 First of all I want to describe what the finished app will do:
 
@@ -29,18 +29,21 @@ Secondly I want to explain the complications related with WebRTC:
 - A terminal with SSH (you can use cmd.exe or [cygwin](http://www.cygwin.com/) for Windows)
 - A node.js-Server which uses Websockets. If you have none I can recommend [www.uberspace.de](https://uberspace.de/). You will get your own virtual machine with SSH-access for 30 days free. After that you can choose how much you want to pay, the minimum is 1 Euro. My proof of concept also runs on uberspace.
 - Any texteditor. I am using [Sublime Text 2](http://www.sublimetext.com/2)
-- Any FTP-Client which supports SFTP (I am using [FileZilla](https://filezilla-project.org) )
+- Any FTP-Client which supports SFTP if you don't want to use the terminal too much (I am using [FileZilla](https://filezilla-project.org) )
 
 For easier implementation and understanding I provide you with the (nearly) finished files and describe what each part of the code does.
 
+### [Download the ZIP](link)
+
 The core-application exists of 3 files:
 
-- ['server.js'](linktofile): The node-server which is responsible for signaling
-- ['client.js'](linktofile): Our client-application which handles all the fancy WebRTC-stuff
-- ['index.html'](linktofile): The view of our application
+- `server.js`: The node-server which is responsible for signaling
+- `client.js`: Our client-application which handles all the fancy WebRTC-stuff
+- `index.html`: The view of our application
+
 
 ### Important: I am not an expert in WebRTC nor in Websecurity. I just wrote down what I learned while programming the WebRTC-App for my Bachelor-Thesis, so this tutorial is not to be understood as a complete and finished example!
 ### I will not be reliable for any problems or issues you have during creating or while using the application! If you want to build an commercial application or an application where security is highly important you should not use this tutorial!
 
-## Let's get started!
+Alright, let's get started!
 

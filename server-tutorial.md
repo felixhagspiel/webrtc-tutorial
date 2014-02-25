@@ -2,7 +2,7 @@
 
 ### Setting up a WebSocket Server for Signaling using uberspace.de
 
-If you want to use uberspace.de you will have to ask them to open up a port for you so you can use websockets. Usually they respond in 1-2 days max., for this example it took them half an hour to reply (a Monday at 4pm). Where you have to write the email too is described below. If you do not want to wait you have to use another nodehosting service, a list can be found [here](https://github.com/joyent/node/wiki/Node-Hosting).
+If you want to use uberspace.de you will have to ask them to open up a port for you so you can use websockets. Usually they respond in 1-2 days max., for this example it took them half an hour to reply (a Monday at 4pm). Where you have to write the email to is described below. If you do not want to wait you have to use another nodehosting service, a [list can be found here](https://github.com/joyent/node/wiki/Node-Hosting).
 
 If you still want to use uberspace, go to [uberspace.de/register](https://uberspace.de/register) and enter a name below 'DEIN UBERSPACE'. On the next page select a password right below where it says 'ICH WÄHLE LIEBER EIN PASSWORT' (you will need a strong password, just keep typing until the text gets green). After that your account is created. Hurray! On the following page you will find your account-related email address, in my case it is webrtcer@vulpecula.uberspace.de. `vulpecula` is the name of the server where your VM is hosted, you will need that a lot so better write it down (your password also, of course).
 Then login to webmail via via `http://webmail.yourvmservername.uberspace.de`, send an email to `hallo@uberspace.de` and kindly ask them to open up a port between 61000 and 65535 so you can use websockets (you can write in English).
@@ -19,7 +19,7 @@ Then check if node and npm is installed by typing these commands (if they are in
 
 `npm -v`
 
-Then we have to create a few new folders where we can store our project files (of course you can do that also by using an FTP-Client):
+Then we have to create a few new folders where we can store our project files (of course you can do that also by using an FTP-Client and just upload the package):
 
 `mkdir /var/www/virtual/yourusername/webrtc`
 
