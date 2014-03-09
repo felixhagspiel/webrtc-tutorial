@@ -1,4 +1,4 @@
-## The Signaling-Server
+## The Server
 
 ### Setting up a WebSocket Server for Signaling using uberspace.de
 
@@ -41,9 +41,13 @@ Then copy all the code from the server.js-file you downloaded before and paste i
 
 Now exit the editor (you can exit it by pressing `CTRL+X` on Windows, but it should show you the shortcut to exit at the bottom of your terminal), it will ask you then to save the file, press `y` and then hit `enter`.
 
-Now lets install the websocket-dependencies:
+Now lets install the server-dependencies:
 
 `npm install websocket`
+
+`npm install uuid`
+
+The uuid-module is a random number generator and will be used to create your room's ID.
 
 Now let's try to start the server:
 
@@ -53,11 +57,11 @@ If you see something like this:
 
 `Mon Feb 17 2014 16:47:39 GMT+0100 (CET) Server is listening on port 61234`
 
-it means that the server is up and running. For now we will start it manually, which means that you have to restart it everytime it crashes or you logout, which is better for debugging purposes. Later you can read [here](https://uberspace.de/dokuwiki/development:nodejs) on how to start a daemon which automatically starts the server.
+your server is up and running. For now we will start it manually, which means that you have to restart it everytime it crashes or you logout, which is better for debugging purposes. Later you can read [here](https://uberspace.de/dokuwiki/development:nodejs) on how to start a daemon which automatically starts the server.
 
 #### Note: As node.js is written in JavaScript, the whole server will be down for all users when an error occurs, even if the error happens just on one single connection!
 
-### Now let's look at the code
+### Now let's have a look at the code
 
 I will not describe all the things I already mentioned in the comments. I will rather give a look how the message-flow works.
 
@@ -75,7 +79,7 @@ It stays opened until the connection is closed. Inside it you can see
 
 which will be executed each time we call the connection.send()-function on the client side. Inside it we try to parse the message to JSON and handle the different kind of message-types. The different kinds relevant for the server are `roomCreated` and `offer`. If the type does not match those types the message will be delivered to the partner who is inside the same room.
 
-### `case 'createRoom'`:
+### createRoom
 
 This is the first message to the server before a room can be joined. This is executed whenever someone presses the "create room"-button.
 First, a unique ID is created which will identify the room:
@@ -99,9 +103,11 @@ Next we create the response-message and send it as JSON to the creator of the ro
 
 #### Note: As this is a full-duplex permanent connection, we do not have to wait for request from the user like you have to when using regular HTTP. We can send messages to the user whenever we want. This is one of the big advantages of websockets.
 
-And voilà, the room is created. Now we see what happens when someone wants to join our room.
+And voilà, the room is created.
 
-### `case 'offer'`:
+Now let's see what happens when someone wants to join our room.
+
+### offer
 
 When a user wants to enter our room, he has to have the room-id first, so you have to pass it to him somehow (IM, email, phone, etc ...). Of course you could show all available room-ID's on the login-page, but then everyone could join your room, not just your friend.
 So after he clicked on the `join room`-button, the server receives a message with the type `offer`. It checks then if a room by that ID is present and if the partnerConnection is empty. If not it will send an error to the user. If it is free the connection will be stored as partnerConnection inside the rooms-object:
@@ -122,7 +128,7 @@ Because the rooms-object is above the scope of the `wsServer.on('request', funct
 	// we just pass on the data-object we received from the partner who wants to join
 	return send(rooms[data.roomId].creatorConnection, data);
 
-### `default`:
+### default
 
 After that we have both creator- and partner-connection. Now each message will be just transferred to the opposite member of the room without any special action taken:
 

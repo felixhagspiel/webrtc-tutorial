@@ -1,4 +1,4 @@
-### Creating the Client Application
+## The Client
 
 Now we come to the WebRTC part. As we have to communicate with the view via eventlisteners we have to take short looks at the `index.html`-file. Note also that I am talking about two different kind of connections in the following text - the websocket-connection to the server and the peer-to-peer-connection to your partner. I will not explain too much about the websocket-connection as it is self-explaining and similar to the things I explained when creating the server. What I will explain later on is the stuff that happens inside `.onmessage()`.
 In this part the offerer is the one who wants to join a room and the answerer is the creator of the room.
@@ -6,17 +6,14 @@ Do as we did before and create a file `client.js` inside your `/public`-folder. 
 
 So now I will explain what happens when someone clicks on the `join room`-button (we assume that someone already created a room as described in the server-part of this tutorial).
 
+### Offer
+
 First, we try to get the audio- and videostream of the person and add it to our `ownVideo`-element. This happens in the `index.html`:
 
 	// get media-stream
 	var success = function(myStream){
-		if(ownVideo.mozSrcObject !== undefined) {
-			ownVideo.mozSrcObject = myStream;
-		}
-		else {
-			ownVideo.src = URL.createObjectURL(myStream);
-		}
-		ownVideo.play();
+		// set videostream on ownVideo-object
+        ownVideo.src = URL.createObjectURL(myStream);
 		// join a room
 		WebRTC.joinRoom(roomidInput.value);
 	};
@@ -75,7 +72,7 @@ In `createOffer()` we create a new peerConnection-object by passing a STUN-serve
     }
 
 The STUN-server is needed to setup the peer-connection because of NAT (if you want to know more about why we need STUN-server [read this article](http://www.html5rocks.com/en/tutorials/webrtc/infrastructure/?redirect_from_locale=de)). In this case we use one of Google's STUN-servers.
-Now we add our medai-stream to the connection (it is important to that at this point and not after the connection was established):
+Now we add our media-stream to the connection (it is important to do that at this point and not after the connection was established):
 
 	// add media-stream to peerconnection
 	peerConnection.addStream(myStream);
@@ -116,7 +113,7 @@ The server passes the message to the creator of the room, who then saves it by e
         if(!otherSDP) {
             othersCandidates.push(iceCandidate);
         }
-        // add icecandidates immediately if not Firefox & if remoteDescription is set
+        // add icecandidates immediately if remoteDescription is set
         if(otherSDP &&
                 iceCandidate.candidate &&
                 iceCandidate.candidate !== null ) {
@@ -140,7 +137,11 @@ Now we have set all eventlisteners on the offerer's side and can create the actu
 		sendToServer(data);
 	});
 
-Then we are finished on the offerer's side for now. On the answerer side (who is the creator of the room in this case) we receive the message containing the SDP. We save the SDP and exectue `createAnswer()`, which looks a lot like the `createOffer()`-function before:
+Then we are finished on the offerer's side for now.
+
+### Answer
+
+On the answerer side (who is the creator of the room in this case) we receive the message containing the SDP. We save the SDP and exectue `createAnswer()`, which looks a lot like the `createOffer()`-function before:
 
 	// other guy wants to join our room
 	case 'offer':
@@ -195,7 +196,9 @@ The function `ceateRTCIceCandidate()` handles prefixes and creates a new RTCIceC
 	};
 	sendToServer(data);
 
-And now we are back on the offerer`s side. Here we store the SDP and call the function `handshakeDone()`:
+### Finish the handshake
+
+And now we are back on the offerer's side. Here we store the SDP and call the function `handshakeDone()`:
 
 	// we receive the answer
 	case 'answer':
@@ -223,4 +226,6 @@ Now the peer-connection should be up and running and the `.onaddstream()`-eventh
 Tadaaaaaa! Now you should see and hear your partner.
 
 Of course there are a ton of things left to be improved (first of all cross-browser-support), but I hope I could give you a first look inside WebRTC. Now go and build some awesome applications! :)
+
+If you find something not understandable or if you have some ideas on how to improve this tutorial, please write me an email to info@felixhagspiel.de or leave a comment. Thank you!
 
